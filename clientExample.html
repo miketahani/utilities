@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf8">
+  <title>sketch</title>
+  <style>
+    * { box-sizing: border-box; }
+    body, #root {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import { Capture } from './client.js'
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 512
+    canvas.height = 512
+    document.getElementById('root').appendChild(canvas)
+    const ctx = canvas.getContext('2d')
+
+    let frame
+    const capture = new Capture('ws://localhost:7005', render)
+
+    const makeBubble = () => ([
+      Math.random() * 512 | 0, // x
+      Math.random() * 512 | 0, // y
+      Math.random() * 50 + 5 | 0 // radius
+    ])
+
+    const bubbles = Array.from({ length: 10 }, makeBubble)
+
+
+    function render () {
+      ctx.clearRect(0, 0, 512, 512)
+
+      bubbles.forEach(bubble => {
+        const [x, y, r] = bubble
+        const nextR = bubble[2] = r - 1
+        if (nextR <= 0) {
+          // Reset
+          bubble[0] = Math.random() * 512 | 0
+          bubble[1] = Math.random() * 512 | 0
+          bubble[2] = Math.random() * 50 + 5 | 0
+        } else {
+          ctx.beginPath()
+          ctx.arc(...bubble, 0, 2 * Math.PI)
+          ctx.fillStyle = `hsl(${nextR / 55 * 360 | 0}, 100%, 70%)`
+          ctx.fill()
+        }
+      })
+
+      capture.frame(canvas)
+
+      frame = requestAnimationFrame(render)
+    }
+
+    window.addEventListener('click', e => {
+      cancelAnimationFrame(frame)
+      capture.close()
+    })
+  </script>
+</body>
+</html>

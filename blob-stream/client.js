@@ -1,16 +1,15 @@
 export class Capture {
-  constructor (websocketURL, onOpen, _canvas) {
+  constructor (websocketURL, onOpen) {
     this.ws = new WebSocket(websocketURL)
-    this.canvas = _canvas
+    this.ws.addEventListener('open', onOpen)
+  }
 
-    if (onOpen) {
-      this.ws.addEventListener('open', onOpen)
+  close = () => {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      this.ws.close()
+      this.ws = null
     }
   }
 
-  close = () => this.ws?.readyState === WebSocket.OPEN && this.ws.close()
-
-  frame = (canvas = this.canvas) => {
-    canvas.toBlob(blob => this.ws.send(blob))
-  }
+  frame = canvas => canvas.toBlob(blob => this.ws.send(blob))
 }

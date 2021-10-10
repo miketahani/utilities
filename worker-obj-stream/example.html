@@ -70,7 +70,7 @@
       renderer.render(scene, camera)
     }
 
-    const worker = new Worker('worker-send-arr.js')
+    const worker = new Worker('worker.js')
     worker.addEventListener('message', e => addVertex(...e.data))
     worker.postMessage(OBJ_FILE)
 

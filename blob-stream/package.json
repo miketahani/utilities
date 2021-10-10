@@ -1,9 +1,8 @@
 {
-  "name": "canvid",
+  "name": "blob-stream",
   "type": "module",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
   "scripts": {
     "server": "node server",
     "client": "http-server -p 8000",

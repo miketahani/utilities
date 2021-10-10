@@ -36,9 +36,9 @@
 
     const bubbles = Array.from({ length: 10 }, makeBubble)
 
-
     function render () {
-      ctx.clearRect(0, 0, 512, 512)
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, 512, 512)
 
       bubbles.forEach(bubble => {
         const [x, y, r] = bubble

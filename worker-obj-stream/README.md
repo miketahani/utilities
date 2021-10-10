@@ -1,8 +1,7 @@
 # worker-obj-stream
 
-Stream a local OBJ file to a frontend.
+Stream a local OBJ file to a frontend. Replace OBJ file in `example.html` with your own.
 
 ### TODO
 
-- Example usage
-- Tiling
+- Tiling in the worker

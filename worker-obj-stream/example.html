@@ -18,7 +18,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/build/three.min.js"></script>
   <script>
-    const OBJ_FILE = 'shuttle.obj'
+    const OBJ_FILE = 'car.obj'
+    const MAX_POINTS = 659444 // `grep "v " car.obj | wc -l`
 
     const width = window.innerWidth
     const height = window.innerHeight
@@ -30,10 +31,9 @@
     renderer.setSize(width, height)
     document.getElementById('root').appendChild(renderer.domElement)
 
-    camera.position.z = 200;
+    camera.position.z = 120
 
     // Create particles
-    const MAX_POINTS = 121826 // `grep "v " shuttle.obj | wc -l`
     const geometry = new THREE.BufferGeometry()
     const positions = new Float32Array(MAX_POINTS * 3)
     let lastIndex = 0
@@ -51,8 +51,8 @@
     const points = new THREE.Points(geometry, material)
     scene.add(points)
 
-    points.position.y = -100
-    points.scale.set(20, 20, 20)
+    points.position.y = -20
+    points.scale.set(40, 40, 40)
 
     function addVertex (x, y, z) {
       const positions = points.geometry.attributes.position.array
@@ -60,6 +60,7 @@
       positions[lastIndex++] = y
       positions[lastIndex++] = z
 
+      // Performance: batch these
       points.geometry.setDrawRange(0, lastIndex / 3)
       points.geometry.attributes.position.needsUpdate = true
     }

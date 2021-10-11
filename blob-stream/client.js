@@ -7,6 +7,7 @@ export class Capture {
   close = () => {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.close()
+      // FIXME Do event listeners get GC'd when we lose WS ref?
       this.ws = null
     }
   }

@@ -42,9 +42,10 @@ class OBJDecoderStream {
   })
 }
 
+const BATCH_SIZE = 2000
+
 class PointStream {
-  n = 500
-  positions = new Float32Array(500 * 3)
+  positions = new Float32Array(BATCH_SIZE * 3)
   lastIndex = 0
   onPoint = null
 
@@ -53,7 +54,7 @@ class PointStream {
     this.positions[this.lastIndex++] = y
     this.positions[this.lastIndex++] = z
 
-    if (this.lastIndex / 3 === this.n) {
+    if (this.lastIndex / 3 === BATCH_SIZE) {
       this.releaseBatch(controller)
     }
   }
@@ -61,13 +62,13 @@ class PointStream {
   releaseBatch = consumerController => {
     let batch = this.positions
 
-    // Cut the array size down if points < n (final batch)
-    if (this.lastIndex / 3 < this.n) {
+    // Cut the array size down if points < batch size (final batch)
+    if (this.lastIndex / 3 < BATCH_SIZE) {
       batch = new Float32Array(this.lastIndex)
     }
 
     consumerController.enqueue(batch)
-    this.positions = new Float32Array(this.n * 3)
+    this.positions = new Float32Array(BATCH_SIZE * 3)
     this.lastIndex = 0
   }
 
@@ -82,7 +83,7 @@ class PointStream {
     write: data => this.onPoint(data),
 
     close: controller => {
-      // Send the last batch, which may not have this.n points
+      // Send the last batch, which may not have BATCH_SIZE points
       this.releaseBatch()
     }
   })

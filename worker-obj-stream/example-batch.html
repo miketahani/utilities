@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf8">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body, #root, svg, canvas {
+      margin: 0;
+      padding: 0;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.133.1/build/three.min.js"></script>
+  <script>
+    const OBJ_FILE = 'car.obj'
+    let n = 0
+
+    const width = window.innerWidth
+    const height = window.innerHeight
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 500)
+
+    const renderer = new THREE.WebGLRenderer()
+    renderer.setSize(width, height)
+    document.getElementById('root').appendChild(renderer.domElement)
+
+    camera.position.z = 120
+
+    const material = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.1,
+      transparent: true,
+      opacity: 0.5
+    })
+
+    const container = new THREE.Object3D()
+    container.position.y = -20
+    container.scale.set(40, 40, 40)
+    scene.add(container)
+
+    function addPoints (positions) {
+      console.log(`${(n += positions.length) / 3}`, positions.length / 3)
+
+      const geometry = new THREE.BufferGeometry()
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      const points = new THREE.Points(geometry, material)
+      container.add(points)
+    }
+
+    function render (t) {
+      requestAnimationFrame(render)
+      container.rotation.y = t * 0.001
+      renderer.render(scene, camera)
+    }
+
+    const worker = new Worker('worker-batch.js')
+    worker.addEventListener('message', e => addPoints(e.data))
+    worker.postMessage(OBJ_FILE)
+
+    render()
+  </script>
+</body>
+</html>

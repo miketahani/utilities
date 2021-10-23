@@ -23,6 +23,8 @@ class OBJDecoderStream {
 
   readable = new ReadableStream({
     start: controller => {
+      this.readController = controller
+
       this.decoder.registerOnChunk(
         chunk => controller.enqueue(chunk)
       )
@@ -32,6 +34,57 @@ class OBJDecoderStream {
   writable = new WritableStream({
     write: data => {
       this.decoder.decode(data)
+    },
+    close: controller => {
+      // Teardown
+      this.readController.close()
+    }
+  })
+}
+
+const BATCH_SIZE = 2000
+
+class PointStream {
+  positions = new Float32Array(BATCH_SIZE * 3)
+  lastIndex = 0
+  onPoint = null
+
+  onPoint = (controller, [x, y, z]) => {
+    this.positions[this.lastIndex++] = x
+    this.positions[this.lastIndex++] = y
+    this.positions[this.lastIndex++] = z
+
+    if (this.lastIndex / 3 === BATCH_SIZE) {
+      this.releaseBatch(controller)
+    }
+  }
+
+  releaseBatch = consumerController => {
+    let batch = this.positions
+
+    // Cut the array size down if points < batch size (final batch)
+    if (this.lastIndex / 3 < BATCH_SIZE) {
+      batch = new Float32Array(this.lastIndex)
+    }
+
+    consumerController.enqueue(batch)
+    this.positions = new Float32Array(BATCH_SIZE * 3)
+    this.lastIndex = 0
+  }
+
+  readable = new ReadableStream({
+    start: controller => {
+      this.onPoint = this.onPoint.bind(this, controller)
+      this.releaseBatch = this.releaseBatch.bind(this, controller)
+    }
+  })
+
+  writable = new WritableStream({
+    write: data => this.onPoint(data),
+
+    close: controller => {
+      // Send the last batch, which may not have BATCH_SIZE points
+      this.releaseBatch()
     }
   })
 }
@@ -40,6 +93,7 @@ self.addEventListener('message', e => {
   fetch(e.data)
     .then(res => res.body.pipeThrough(new TextDecoderStream()))
     .then(text => text.pipeThrough(new OBJDecoderStream()))
+    .then(positions => positions.pipeThrough(new PointStream()))
     .then(stream => stream.pipeTo(new WritableStream({
       write(data) {
         self.postMessage(data)

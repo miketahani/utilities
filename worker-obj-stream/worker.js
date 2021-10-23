@@ -55,7 +55,7 @@ class PointStream {
     this.positions[this.lastIndex++] = z
 
     if (this.lastIndex / 3 === BATCH_SIZE) {
-      this.releaseBatch(controller)
+      this.releaseBatch()
     }
   }
 
